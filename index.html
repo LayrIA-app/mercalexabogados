@@ -1789,7 +1789,7 @@ if(document.readyState==="loading"){
 
   <div class="op-hero">
     <p class="op-eyebrow">Valoraciones verificadas</p>
-    <h1 class="op-title">Lo que dicen quienes<br><em>ya confían en nosotros</em></h1>
+    <h1 class="op-title">Opinión de quienes han<br><em>confiado en MercaLex Abogados</em></h1>
 
   </div>
 
@@ -1851,7 +1851,7 @@ if(document.readyState==="loading"){
             </div>
 
             <div class="op-cat-item">
-              <span class="op-cat-name">Claridad en la orientación recibida<br><span style="font-size:11px;color:#aaa">jurídica, fiscal, contable, mercantil…</span></span>
+              <span class="op-cat-name">Explicación recibida<br><span style="font-size:11px;color:#aaa">jurídica, fiscal, contable, mercantil…</span></span>
               <div class="op-stars">
                 <input type="radio" name="op_orientacion" id="opo5" value="5"><label for="opo5">★</label>
                 <input type="radio" name="op_orientacion" id="opo4" value="4"><label for="opo4">★</label>
@@ -1862,7 +1862,7 @@ if(document.readyState==="loading"){
             </div>
 
             <div class="op-cat-item">
-              <span class="op-cat-name">Eficacia en la resolución</span>
+              <span class="op-cat-name">Utilidad de la respuesta</span>
               <div class="op-stars">
                 <input type="radio" name="op_eficacia" id="ope5" value="5"><label for="ope5">★</label>
                 <input type="radio" name="op_eficacia" id="ope4" value="4"><label for="ope4">★</label>
@@ -1873,13 +1873,24 @@ if(document.readyState==="loading"){
             </div>
 
             <div class="op-cat-item">
-              <span class="op-cat-name">Rapidez de respuesta</span>
+              <span class="op-cat-name">Tiempo de respuesta o cita</span>
               <div class="op-stars">
                 <input type="radio" name="op_rapidez" id="opr5" value="5"><label for="opr5">★</label>
                 <input type="radio" name="op_rapidez" id="opr4" value="4"><label for="opr4">★</label>
                 <input type="radio" name="op_rapidez" id="opr3" value="3"><label for="opr3">★</label>
                 <input type="radio" name="op_rapidez" id="opr2" value="2"><label for="opr2">★</label>
                 <input type="radio" name="op_rapidez" id="opr1" value="1"><label for="opr1">★</label>
+              </div>
+            </div>
+
+            <div class="op-cat-item">
+              <span class="op-cat-name">¿Recomendarías MercaLex Abogados?<br><span style="font-size:11px;color:#aaa">1 = No · 5 = Totalmente</span></span>
+              <div class="op-stars">
+                <input type="radio" name="op_recomendaria" id="oprec5" value="5"><label for="oprec5">★</label>
+                <input type="radio" name="op_recomendaria" id="oprec4" value="4"><label for="oprec4">★</label>
+                <input type="radio" name="op_recomendaria" id="oprec3" value="3"><label for="oprec3">★</label>
+                <input type="radio" name="op_recomendaria" id="oprec2" value="2"><label for="oprec2">★</label>
+                <input type="radio" name="op_recomendaria" id="oprec1" value="1"><label for="oprec1">★</label>
               </div>
             </div>
           </div>
@@ -1930,12 +1941,12 @@ if(document.readyState==="loading"){
   }
   function capFirst(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
-  var CAT_KEYS   = ['atencion','orientacion','eficacia','rapidez'];
-  var CAT_LABELS = {'atencion':'Atención','orientacion':'Orientación jurídica','eficacia':'Eficacia','rapidez':'Rapidez'};
+  var CAT_KEYS   = ['atencion','orientacion','eficacia','rapidez','recomendaria'];
+  var CAT_LABELS = {'atencion':'Atención recibida','orientacion':'Explicación recibida','eficacia':'Utilidad de la respuesta','rapidez':'Tiempo de respuesta','recomendaria':'¿Recomendarías MercaLex?'};
 
   function renderCard(r, isNew){
     var nombre = r.nombre || 'Anónimo';
-    var avg = ((r.atencion+r.orientacion+r.eficacia+r.rapidez)/4).toFixed(1);
+    var avg = ((r.atencion+r.orientacion+r.eficacia+r.rapidez+(r.recomendaria||0))/(r.recomendaria?5:4)).toFixed(1);
     var cats = CAT_KEYS.map(function(k){
       return '<div class="op-card-cat"><span class="op-card-cat-name">'+CAT_LABELS[k]+'</span><span class="op-card-cat-stars">'+starsStr(r[k])+'</span></div>';
     }).join('');
@@ -2035,12 +2046,13 @@ if(document.readyState==="loading"){
     var msgOk  = document.getElementById('opMsgOk');
     var msgErr = document.getElementById('opMsgErr');
 
-    var atencion    = parseInt((document.querySelector('input[name="op_atencion"]:checked')||{}).value);
-    var orientacion = parseInt((document.querySelector('input[name="op_orientacion"]:checked')||{}).value);
-    var eficacia    = parseInt((document.querySelector('input[name="op_eficacia"]:checked')||{}).value);
-    var rapidez     = parseInt((document.querySelector('input[name="op_rapidez"]:checked')||{}).value);
+    var atencion      = parseInt((document.querySelector('input[name="op_atencion"]:checked')||{}).value);
+    var orientacion   = parseInt((document.querySelector('input[name="op_orientacion"]:checked')||{}).value);
+    var eficacia      = parseInt((document.querySelector('input[name="op_eficacia"]:checked')||{}).value);
+    var rapidez       = parseInt((document.querySelector('input[name="op_rapidez"]:checked')||{}).value);
+    var recomendaria  = parseInt((document.querySelector('input[name="op_recomendaria"]:checked')||{}).value);
 
-    if([atencion,orientacion,eficacia,rapidez].some(function(v){return isNaN(v);})){
+    if([atencion,orientacion,eficacia,rapidez,recomendaria].some(function(v){return isNaN(v);})){
       msgErr.textContent='Por favor valora todos los apartados antes de enviar.';
       msgErr.style.display='block';
       setTimeout(function(){msgErr.style.display='none';},3000);
@@ -2053,7 +2065,7 @@ if(document.readyState==="loading"){
     var payload={
       nombre:     document.getElementById('opNombre').value.trim()||null,
       empresa:    document.getElementById('opEmpresa').value.trim()||null,
-      atencion:atencion, orientacion:orientacion, eficacia:eficacia, rapidez:rapidez,
+      atencion:atencion, orientacion:orientacion, eficacia:eficacia, rapidez:rapidez, recomendaria:recomendaria,
       comentario: document.getElementById('opComentario').value.trim()||null
     };
 
@@ -2376,7 +2388,7 @@ if(document.readyState==="loading"){
   var bar = document.createElement('div');
   bar.style.cssText = 'position:absolute;bottom:36px;left:50%;transform:translateX(-50%);width:120px;height:3px;background:#e8e8e8;border-radius:3px;overflow:hidden;';
   var fill = document.createElement('div');
-  fill.style.cssText = 'height:100%;width:0;background:#C9A84C;border-radius:2px;animation:splashBar 2s ease-in-out forwards;';
+  fill.style.cssText = 'height:100%;width:0;background:#C9A84C;border-radius:2px;animation:splashBar 5s ease-in-out forwards;';
   bar.appendChild(fill);
 
   // Cuadrados del logo - mismos colores que el navbar
@@ -2455,8 +2467,8 @@ if(document.readyState==="loading"){
   document.head.appendChild(style);
 
   // Duraciones y delays genuinamente distintos
-  var sqDur = [3.2, 2.7, 3.6, 3.0, 4.1];
-  var sqDel = [0.2, 0.7, 0.05, 0.45, 0.9];
+  var sqDur = [5.2, 4.7, 5.6, 5.0, 6.1];
+  var sqDel = [3.2, 3.7, 3.05, 3.45, 3.9];
 
   var sqEls = sqColors.map(function(color, i) {
     var sq = document.createElement('div');
@@ -2507,7 +2519,7 @@ if(document.readyState==="loading"){
     setTimeout(function(){
       sqEls.forEach(function(sq){ if(sq.parentNode) sq.parentNode.removeChild(sq); });
     }, 4000);
-  }, 2000);
+  }, 5500);
 })();
 </script>
 </body>
