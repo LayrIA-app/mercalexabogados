@@ -2088,64 +2088,70 @@ if(document.readyState==="loading"){
     }
   });
 
-  // FUEGOS ARTIFICIALES - partículas dinámicas CSS
+  // FUEGOS ARTIFICIALES - 1 explosión central, JS puro, fondo claro
   function showFireworks(){
-    var colors = ['#C9A84C','#F5C400','#D42B2B','#1AB3D4','#8DC63F','#F5E642','#fff'];
-    var st = document.createElement('style');
-    st.textContent = [
-      '@keyframes fwTextIn{0%{opacity:0;transform:translateY(20px) scale(0.8)}60%{opacity:1;transform:translateY(-4px) scale(1.05)}100%{opacity:1;transform:translateY(0) scale(1)}}',
-      '@keyframes fwPageFade{0%{opacity:0}10%{opacity:1}75%{opacity:1}100%{opacity:0}}',
-      '@keyframes fwParticle{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}'
-    ].join('');
-    document.head.appendChild(st);
+    var COLORS=['#C9A84C','#F5C400','#D42B2B','#1AB3D4','#8DC63F','#F5E642'];
 
-    var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,10,10,0.82);pointer-events:none;animation:fwPageFade 3.2s ease forwards;';
+    var ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(255,255,255,0.96);display:flex;align-items:center;justify-content:center;pointer-events:none;';
 
-    // Texto principal
-    var txt = document.createElement('div');
-    txt.style.cssText = 'font-family:"Playfair Display",serif;font-size:clamp(28px,6vw,52px);color:#fff;text-align:center;line-height:1.2;animation:fwTextIn 0.6s cubic-bezier(.22,1,.36,1) 0.2s both;';
-    txt.innerHTML = '¡Gracias!<br><span style="font-size:0.45em;font-style:italic;color:#C9A84C;letter-spacing:0.05em;">Tu opinión ya está publicada</span>';
-    ov.appendChild(txt);
+    var pc=document.createElement('div');
+    pc.style.cssText='position:absolute;inset:0;pointer-events:none;';
 
-    // Contenedor de partículas
-    var pc = document.createElement('div');
-    pc.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;';
-
-    // Generar partículas en oleadas
-    function burst(cx, cy, delay){
-      for(var i=0;i<18;i++){
-        var p = document.createElement('div');
-        var angle = (Math.PI*2*i/18) + (Math.random()-0.5)*0.4;
-        var dist  = 80 + Math.random()*160;
-        var dx = Math.cos(angle)*dist;
-        var dy = Math.sin(angle)*dist;
-        var size = 4 + Math.random()*6;
-        var color = colors[Math.floor(Math.random()*colors.length)];
-        var dur = 0.7 + Math.random()*0.6;
-        p.style.cssText = 'position:absolute;border-radius:50%;'
-          +'width:'+size+'px;height:'+size+'px;background:'+color+';'
-          +'left:'+cx+'px;top:'+cy+'px;'
-          +'--dx:'+dx+'px;--dy:'+dy+'px;'
-          +'animation:fwParticle '+dur+'s ease-out '+delay+'s both;';
-        pc.appendChild(p);
-      }
-    }
-
-    // 4 explosiones en posiciones distintas con delays escalonados
-    var W = window.innerWidth, H = window.innerHeight;
-    burst(W*0.3, H*0.25, 0.15);
-    burst(W*0.7, H*0.2,  0.35);
-    burst(W*0.2, H*0.6,  0.55);
-    burst(W*0.75,H*0.55, 0.75);
-    burst(W*0.5, H*0.35, 0.9);
+    var txt=document.createElement('div');
+    txt.style.cssText='font-family:"Playfair Display",serif;text-align:center;z-index:2;position:relative;opacity:0;transform:translateY(16px);transition:opacity 0.6s ease,transform 0.6s cubic-bezier(.22,1,.36,1);';
+    txt.innerHTML='<div style="font-size:clamp(36px,6vw,56px);color:#1a1a1a;line-height:1.1;font-weight:400">¡Gracias!</div>'
+      +'<div style="font-size:clamp(14px,2vw,18px);font-style:italic;color:#C9A84C;margin-top:10px;letter-spacing:0.04em">Tu opinión ya está publicada</div>';
 
     ov.appendChild(pc);
+    ov.appendChild(txt);
     document.body.appendChild(ov);
-    setTimeout(function(){ ov.remove(); st.remove(); }, 3400);
+
+    // Texto entra
+    setTimeout(function(){
+      txt.style.opacity='1';
+      txt.style.transform='translateY(0)';
+    },100);
+
+    // 1 explosión central, 32 partículas, JS puro sin CSS custom props
+    var W=window.innerWidth, H=window.innerHeight;
+    var cx=W*0.5, cy=H*0.38;
+    for(var i=0;i<32;i++){
+      (function(idx){
+        var p=document.createElement('div');
+        var angle=(Math.PI*2*idx/32)+(Math.random()-0.5)*0.3;
+        var dist=90+Math.random()*180;
+        var dx=Math.cos(angle)*dist;
+        var dy=Math.sin(angle)*dist;
+        var size=3+Math.random()*6;
+        var color=COLORS[Math.floor(Math.random()*COLORS.length)];
+        p.style.cssText='position:absolute;width:'+size+'px;height:'+size+'px;background:'+color+';border-radius:50%;left:'+cx+'px;top:'+cy+'px;';
+        pc.appendChild(p);
+        var start=null, dur=900+Math.random()*500;
+        function anim(ts){
+          if(!start) start=ts;
+          var t=Math.min((ts-start)/dur,1);
+          var ease=1-Math.pow(1-t,2);
+          var gravity=t*t*60;
+          p.style.transform='translate('+(dx*ease)+'px,'+(dy*ease+gravity)+'px) scale('+(1-t*0.8)+')';
+          p.style.opacity=Math.pow(1-t,1.2);
+          if(t<1) requestAnimationFrame(anim);
+          else p.remove();
+        }
+        requestAnimationFrame(anim);
+      })(i);
+    }
+
+    // Texto sale
+    setTimeout(function(){
+      txt.style.transition='opacity 0.7s ease';
+      txt.style.opacity='0';
+    },2700);
+    // Overlay eliminar
+    setTimeout(function(){ ov.remove(); }, 3400);
   }
 
-  // INYECTAR BOTÓN "OPINIONES" EN EL NAV
+    // INYECTAR BOTÓN "OPINIONES" EN EL NAV
   function injectOpinionesBtn(){
     // Desktop nav
     var dn = document.querySelector('[class*="space-x"]');
