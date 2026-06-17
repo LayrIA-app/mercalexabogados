@@ -1537,6 +1537,19 @@ function injectMobile(){
     for(var i=0;i<mbs.length;i++){if(mbs[i].textContent.trim()==="Contacto") mc=mbs[i];}
     var mi=buildMobileItems(); mi.className=(mi.className||"")+" grupo-m-ok";
     if(mc) mn.insertBefore(mi,mc); else mn.appendChild(mi);
+
+    // Inyectar botón Opiniones en móvil antes de Contacto
+    if(!mn.querySelector(".op-mobile-btn")){
+      var opBtn=document.createElement("button");
+      opBtn.textContent="Opiniones";
+      opBtn.className=(mbs[0]?mbs[0].className:"")+" op-mobile-btn";
+      opBtn.addEventListener("click",function(){
+        var closeBtn=document.querySelector("[aria-label='Close menu'],[aria-label='Cerrar']");
+        if(closeBtn) closeBtn.click();
+        setTimeout(function(){ if(window._mlOpenOpiniones) window._mlOpenOpiniones(); },150);
+      });
+      if(mc) mn.insertBefore(opBtn,mc); else mn.appendChild(opBtn);
+    }
     return true;
   }
   return false;
@@ -1772,6 +1785,67 @@ if(document.readyState==="loading"){
   text-align:center; padding:50px 24px; color:#aaa;
 }
 .op-empty p { font-size:14px; margin-top:8px; }
+
+/* BOTÓN VER TODAS + MODAL */
+.op-ver-todas {
+  width:100%; background:none; border:1px solid #e8e2d4; border-radius:2px;
+  padding:13px; font-family:'Inter',sans-serif; font-size:13px; color:#C9A84C;
+  cursor:pointer; margin-top:4px; transition:background .2s, border-color .2s;
+  letter-spacing:0.05em;
+}
+.op-ver-todas:hover { background:#faf6ec; border-color:#C9A84C; }
+
+#opAllModal {
+  display:none; position:fixed; inset:0; z-index:99998;
+  background:rgba(0,0,0,0.5); align-items:center; justify-content:center; padding:20px;
+}
+#opAllModal.open { display:flex; }
+.op-all-inner {
+  background:#fff; border-radius:4px; width:100%; max-width:900px;
+  max-height:85vh; display:flex; flex-direction:column; overflow:hidden;
+}
+.op-all-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:20px 28px; border-bottom:1px solid #e8e2d4; flex-shrink:0;
+}
+.op-all-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:400; color:#1a1a1a; }
+.op-all-close {
+  background:none; border:none; cursor:pointer; font-size:20px;
+  color:#999; line-height:1; padding:4px 8px;
+}
+.op-all-close:hover { color:#1a1a1a; }
+.op-all-body {
+  overflow-y:auto; padding:24px 28px;
+  display:grid; grid-template-columns:1fr 1fr; gap:14px;
+}
+@media(max-width:600px){ .op-all-body { grid-template-columns:1fr; } }
+
+/* Tarjeta reducida para el modal */
+.op-card-sm {
+  background:#faf7f3; border:1px solid #e8e2d4; border-radius:3px;
+  padding:16px 18px;
+}
+.op-card-sm-top {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:8px;
+}
+.op-avatar-sm {
+  width:30px; height:30px; border-radius:50%;
+  background:#fff; border:1px solid #e8d49e;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Playfair Display',serif; font-size:12px; color:#C9A84C; flex-shrink:0;
+}
+.op-card-sm-name { font-size:13px; font-weight:600; color:#1a1a1a; }
+.op-card-sm-empresa { font-size:11px; color:#999; }
+.op-card-sm-avg { font-size:13px; color:#C9A84C; font-weight:600; white-space:nowrap; }
+.op-card-sm-date { font-size:10px; color:#bbb; }
+.op-card-sm-cats {
+  display:grid; grid-template-columns:1fr 1fr; gap:4px 10px;
+  padding:8px 10px; background:#fff; border-radius:2px; margin-bottom:8px;
+}
+.op-card-sm-cat { display:flex; justify-content:space-between; align-items:center; }
+.op-card-sm-cat-name { font-size:10px; color:#888; }
+.op-card-sm-cat-stars { color:#C9A84C; font-size:10px; }
+.op-card-sm-comment { font-size:12px; color:#777; font-style:italic; line-height:1.6; border-left:2px solid #e8d49e; padding-left:10px; }
 </style>
 
 <!-- PÁGINA OPINIONES HTML -->
@@ -1797,22 +1871,27 @@ if(document.readyState==="loading"){
     <div class="op-score-item">
       <span class="op-score-num" id="opAvgAtencion">—</span>
       <div class="op-score-stars" id="opStarsAtencion"></div>
-      <span class="op-score-label">Atención</span>
+      <span class="op-score-label">Atención recibida</span>
     </div>
     <div class="op-score-item">
       <span class="op-score-num" id="opAvgOrientacion">—</span>
       <div class="op-score-stars" id="opStarsOrientacion"></div>
-      <span class="op-score-label">Orientación jurídica</span>
+      <span class="op-score-label">Explicación recibida</span>
     </div>
     <div class="op-score-item">
       <span class="op-score-num" id="opAvgEficacia">—</span>
       <div class="op-score-stars" id="opStarsEficacia"></div>
-      <span class="op-score-label">Eficacia</span>
+      <span class="op-score-label">Utilidad de la respuesta</span>
     </div>
     <div class="op-score-item">
       <span class="op-score-num" id="opAvgRapidez">—</span>
       <div class="op-score-stars" id="opStarsRapidez"></div>
-      <span class="op-score-label">Rapidez</span>
+      <span class="op-score-label">Tiempo de respuesta</span>
+    </div>
+    <div class="op-score-item">
+      <span class="op-score-num" id="opAvgRecomendaria">—</span>
+      <div class="op-score-stars" id="opStarsRecomendaria"></div>
+      <span class="op-score-label">¿Recomendarías MercaLex?</span>
     </div>
   </div>
 
@@ -1919,6 +1998,17 @@ if(document.readyState==="loading"){
   </div>
 </div>
 
+<!-- MODAL TODAS LAS OPINIONES -->
+<div id="opAllModal">
+  <div class="op-all-inner">
+    <div class="op-all-header">
+      <span class="op-all-title">Todas las valoraciones</span>
+      <button class="op-all-close" id="opAllClose">✕</button>
+    </div>
+    <div class="op-all-body" id="opAllBody"></div>
+  </div>
+</div>
+
 <!-- LÓGICA OPINIONES -->
 <script>
 (function(){
@@ -1927,8 +2017,9 @@ if(document.readyState==="loading"){
   var TABLE  = 'resenas_mercalex';
   var knownIds = {};
   var pollTimer = null;
-  // Cliente Supabase oficial (SDK v2)
-  var sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+  var _sb = null;
+  function getSB(){ if(!_sb && window.supabase) _sb = window.supabase.createClient(SB_URL, SB_KEY); return _sb; }
+  function sbH(){ return {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Accept':'application/json','Content-Type':'application/json'}; }
 
   function starsStr(n){ return '★'.repeat(n)+'☆'.repeat(5-n); }
   function fmtDate(iso){
@@ -1966,23 +2057,20 @@ if(document.readyState==="loading"){
 
   async function fetchReviews(){
     try {
-      if(sb){
-        var r = await sb.from(TABLE).select('*').order('created_at',{ascending:false});
-        return r.data || [];
-      }
-      // Fallback REST
-      var res = await fetch(SB_URL+'/rest/v1/'+TABLE+'?select=*&order=created_at.desc',{
-        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
-      });
-      return res.ok ? res.json() : [];
-    } catch(e){ return []; }
+      var res = await fetch(SB_URL+'/rest/v1/'+TABLE+'?select=*&order=created_at.desc', {headers:sbH()});
+      if(res.ok){ var d=await res.json(); return Array.isArray(d)?d:[]; }
+      console.error('fetch error:',res.status);
+      return [];
+    } catch(e){ console.error('fetchReviews:',e); return []; }
   }
 
   function updateGlobal(reviews){
     if(!reviews.length) return;
     document.getElementById('opGlobal').style.display='flex';
     CAT_KEYS.forEach(function(k){
-      var avg=(reviews.reduce(function(s,r){return s+r[k];},0)/reviews.length).toFixed(1);
+      var validReviews = reviews.filter(function(r){ return r[k] != null; });
+      if(!validReviews.length) return;
+      var avg=(validReviews.reduce(function(s,r){return s+r[k];},0)/validReviews.length).toFixed(1);
       document.getElementById('opAvg'+capFirst(k)).textContent=avg;
       document.getElementById('opStars'+capFirst(k)).textContent=starsStr(Math.round(avg));
     });
@@ -2012,7 +2100,15 @@ if(document.readyState==="loading"){
     isFirst = false;
 
     cnt.textContent = reviews.length+' valoración'+(reviews.length!==1?'es':'');
-    list.innerHTML = reviews.map(function(r){ return renderCard(r, addedIds[r.id]||false); }).join('');
+    var visible = reviews.slice(0,3);
+    var html = visible.map(function(r){ return renderCard(r, addedIds[r.id]||false); }).join('');
+    if(reviews.length > 3){
+      html += '<button class="op-ver-todas" id="opVerTodas">Ver todas las opiniones ('+reviews.length+')</button>';
+    }
+    list.innerHTML = html;
+    if(reviews.length > 3){
+      document.getElementById('opVerTodas').addEventListener('click', function(){ openAllModal(reviews); });
+    }
     updateGlobal(reviews);
   }
 
@@ -2024,6 +2120,40 @@ if(document.readyState==="loading"){
     if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
   }
 
+  function renderCardSm(r){
+    var nombre = r.nombre || 'Anónimo';
+    var avg = ((r.atencion+r.orientacion+r.eficacia+r.rapidez+(r.recomendaria||0))/(r.recomendaria?5:4)).toFixed(1);
+    var cats = CAT_KEYS.map(function(k){
+      if(!r[k]) return '';
+      return '<div class="op-card-sm-cat"><span class="op-card-sm-cat-name">'+CAT_LABELS[k]+'</span><span class="op-card-sm-cat-stars">'+starsStr(r[k])+'</span></div>';
+    }).join('');
+    return '<div class="op-card-sm">'
+      +'<div class="op-card-sm-top">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<div class="op-avatar-sm">'+initials(nombre)+'</div>'
+          +'<div><div class="op-card-sm-name">'+nombre+'</div>'
+          +(r.empresa?'<div class="op-card-sm-empresa">'+r.empresa+'</div>':'')+'</div>'
+        +'</div>'
+        +'<div style="text-align:right"><div class="op-card-sm-avg">'+avg+' ★</div><div class="op-card-sm-date">'+fmtDate(r.created_at)+'</div></div>'
+      +'</div>'
+      +'<div class="op-card-sm-cats">'+cats+'</div>'
+      +(r.comentario?'<div class="op-card-sm-comment">'+r.comentario+'</div>':'')
+    +'</div>';
+  }
+
+  function openAllModal(reviews){
+    var body = document.getElementById('opAllBody');
+    body.innerHTML = reviews.map(function(r){ return renderCardSm(r); }).join('');
+    document.getElementById('opAllModal').classList.add('open');
+  }
+
+  document.getElementById('opAllClose').addEventListener('click', function(){
+    document.getElementById('opAllModal').classList.remove('open');
+  });
+  document.getElementById('opAllModal').addEventListener('click', function(e){
+    if(e.target === this) this.classList.remove('open');
+  });
+
   // ABRIR / CERRAR PÁGINA
   function openPage(){
     document.getElementById('ml-opiniones-page').classList.add('open');
@@ -2031,6 +2161,7 @@ if(document.readyState==="loading"){
     isFirst = true;
     startPolling();
   }
+  window._mlOpenOpiniones = openPage; // exponer globalmente para menú móvil
   function closePage(){
     document.getElementById('ml-opiniones-page').classList.remove('open');
     document.body.style.overflow='';
@@ -2071,18 +2202,13 @@ if(document.readyState==="loading"){
 
     try {
       var insertOk = false;
-      if(sb){
-        var r = await sb.from(TABLE).insert([payload]);
-        insertOk = !r.error;
-        if(r.error) console.error('Supabase error:',r.error);
-      } else {
-        var res = await fetch(SB_URL+'/rest/v1/'+TABLE,{
-          method:'POST',
-          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-          body:JSON.stringify(payload)
-        });
-        insertOk = res.ok||res.status===201;
-      }
+      var res = await fetch(SB_URL+'/rest/v1/'+TABLE, {
+        method: 'POST',
+        headers: Object.assign({}, sbH(), {'Prefer': 'return=minimal'}),
+        body: JSON.stringify(payload)
+      });
+      insertOk = res.ok || res.status === 201;
+      if(!insertOk){ console.error('Insert error:', res.status, await res.text()); }
       if(insertOk){
         msgOk.style.display='block';
         document.getElementById('opForm').reset();
@@ -2388,138 +2514,39 @@ if(document.readyState==="loading"){
   var bar = document.createElement('div');
   bar.style.cssText = 'position:absolute;bottom:36px;left:50%;transform:translateX(-50%);width:120px;height:3px;background:#e8e8e8;border-radius:3px;overflow:hidden;';
   var fill = document.createElement('div');
-  fill.style.cssText = 'height:100%;width:0;background:#C9A84C;border-radius:2px;animation:splashBar 5s ease-in-out forwards;';
+  fill.style.cssText = 'height:100%;width:0;background:#C9A84C;border-radius:2px;animation:splashBar 4s ease-in-out forwards;';
   bar.appendChild(fill);
 
-  // Cuadrados del logo - mismos colores que el navbar
-  var sqColors = ['#F5C400','#D42B2B','#1AB3D4','#8DC63F','#F5E642'];
-
-  // Posición final ABSOLUTA de cada cuadrado en pantalla
-  // Fila superior (Y más arriba): cuadrados 0,1,2  |  Fila inferior: 3,4
-  // Calculado respecto al centro del overlay
-  var sqFinalX = [-46,-23,0,-46,-23];
-  var sqFinalY = [-52,-52,-52,-28,-28];
-
-  // Cada cuadrado parte de una altura absoluta diferente en pantalla
-  // startAbsTop = posición top absoluta inicial (vh) — distintas para cada uno
-  // La animación translateY lleva desde (startAbsTop - finalAbsTop) hasta 0
-  // finalAbsTop[i] = 50vh + sqFinalY[i]px  ≈ en porcentaje
-  // Para simplificar usamos translate desde alturas distintas encima de su destino:
-  // sq0 (fila alta): parte de muy arriba (-80vh desde su pos)
-  // sq1 (fila alta): parte de algo menos lejos (-95vh) — llega antes visualmente  
-  // sq2 (fila alta): parte de -65vh — intermedio
-  // sq3 (fila baja): parte de -70vh — su destino es más bajo, viaje distinto
-  // sq4 (fila baja): parte de -110vh — viaje más largo, más tiempo en caída
+  var sqEls = [];
 
   var style = document.createElement('style');
-  style.textContent = [
-    '@keyframes splashZoom{0%{opacity:0;transform:scale(0.1)}60%{opacity:1;transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}',
-    '@keyframes splashBar{0%{width:0%}100%{width:100%}}',
-
-    // sq0: oro — parte de muy arriba, caída moderada, rebote pequeño
-    '@keyframes sqFall0{' +
-      '0%{transform:translate(-8px,-80vh);opacity:0}' +
-      '55%{transform:translate(2px,6px);opacity:1}' +
-      '70%{transform:translate(-1px,-4px)}' +
-      '83%{transform:translate(0,2px)}' +
-      '92%{transform:translate(0,-1px)}' +
-      '100%{transform:translate(0,0);opacity:1}}',
-
-    // sq1: rojo — parte de más arriba aún, cae más rápido, rebote pronunciado
-    '@keyframes sqFall1{' +
-      '0%{transform:translate(12px,-95vh);opacity:0}' +
-      '50%{transform:translate(-3px,10px);opacity:1}' +
-      '67%{transform:translate(1px,-7px)}' +
-      '80%{transform:translate(0,4px)}' +
-      '90%{transform:translate(0,-2px)}' +
-      '96%{transform:translate(0,1px)}' +
-      '100%{transform:translate(0,0);opacity:1}}',
-
-    // sq2: cyan — parte de altura media, deriva lateral suave
-    '@keyframes sqFall2{' +
-      '0%{transform:translate(-15px,-65vh);opacity:0}' +
-      '58%{transform:translate(4px,5px);opacity:1}' +
-      '73%{transform:translate(-2px,-3px)}' +
-      '85%{transform:translate(1px,2px)}' +
-      '93%{transform:translate(0,-1px)}' +
-      '100%{transform:translate(0,0);opacity:1}}',
-
-    // sq3: verde — fila inferior, parte de altura intermedia, llega antes que sq4
-    '@keyframes sqFall3{' +
-      '0%{transform:translate(6px,-70vh);opacity:0}' +
-      '53%{transform:translate(-2px,8px);opacity:1}' +
-      '69%{transform:translate(1px,-5px)}' +
-      '81%{transform:translate(0,3px)}' +
-      '91%{transform:translate(0,-1px)}' +
-      '100%{transform:translate(0,0);opacity:1}}',
-
-    // sq4: amarillo — viaje más largo desde muy arriba, llega el último
-    '@keyframes sqFall4{' +
-      '0%{transform:translate(-10px,-110vh);opacity:0}' +
-      '60%{transform:translate(3px,12px);opacity:1}' +
-      '74%{transform:translate(-1px,-8px)}' +
-      '85%{transform:translate(0,5px)}' +
-      '93%{transform:translate(0,-2px)}' +
-      '97%{transform:translate(0,1px)}' +
-      '100%{transform:translate(0,0);opacity:1}}'
-
-  ].join('');
+  style.textContent = '@keyframes splashZoom{0%{opacity:0;transform:scale(0.1)}60%{opacity:1;transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}@keyframes splashBar{0%{width:0%}100%{width:100%}}';
   document.head.appendChild(style);
-
-  // Duraciones y delays genuinamente distintos
-  var sqDur = [5.2, 4.7, 5.6, 5.0, 6.1];
-  var sqDel = [3.2, 3.7, 3.05, 3.45, 3.9];
-
-  var sqEls = sqColors.map(function(color, i) {
-    var sq = document.createElement('div');
-    sq.style.cssText = 'position:fixed;width:16px;height:16px;border-radius:3px;background:' + color + ';' +
-      'top:calc(50% + ' + sqFinalY[i] + 'px);left:calc(50% + ' + sqFinalX[i] + 'px);' +
-      'animation:sqFall' + i + ' ' + sqDur[i] + 's ' + sqDel[i] + 's ease-in forwards;' +
-      'opacity:0;z-index:100001;';
-    return sq;
-  });
 
   box.appendChild(img);
   overlay.appendChild(box);
   overlay.appendChild(bar);
-  // Cuadrados al body directamente para control total sobre su eliminación
-  sqEls.forEach(function(sq){ document.body.appendChild(sq); });
+  // Cuadrados dentro del overlay — se eliminan automáticamente con él
+  sqEls.forEach(function(sq){ overlay.appendChild(sq); });
   document.body.appendChild(overlay);
 
   setTimeout(function(){
     overlay.style.pointerEvents = 'none';
-    // Cancelar la animación de entrada para que la transición de salida funcione
+
+    // Mover el box
     box.style.animation = 'none';
-    void box.offsetWidth; // forzar reflow
-    // Ahora aplicar la salida: encoge y va hacia arriba-izquierda
+    void box.offsetWidth;
     box.style.transition = 'transform 1.4s cubic-bezier(.4,0,.2,1), opacity 1.3s ease';
     box.style.transformOrigin = 'top left';
     box.style.transform = 'translate(-42vw, -44vh) scale(0.04)';
     box.style.opacity = '0';
-    // Cuadrados convergen hacia posición del logo en navbar
-    sqEls.forEach(function(sq, i) {
-      sq.style.animation = 'none';
-      void sq.offsetWidth;
-      var delay = i * 0.06;
-      sq.style.transition = 'transform 1.3s cubic-bezier(.4,0,.2,1) ' + delay + 's, opacity 1s ease ' + delay + 's';
-      sq.style.transform = 'translate(-42vw, -44vh) scale(0.05)';
-      sq.style.opacity = '0';
-    });
-    // Overlay funde muy lento y tenue
+
     setTimeout(function(){
       overlay.style.transition = 'opacity 0.9s ease';
       overlay.style.opacity = '0';
-    }, 400);
-    // Eliminar cuadrados explícitamente + overlay
-    setTimeout(function(){
-      sqEls.forEach(function(sq){ if(sq.parentNode) sq.parentNode.removeChild(sq); });
-      overlay.remove();
-    }, 1100);
-    // Failsafe: eliminar cuadrados pase lo que pase a los 4s
-    setTimeout(function(){
-      sqEls.forEach(function(sq){ if(sq.parentNode) sq.parentNode.removeChild(sq); });
-    }, 4000);
-  }, 5500);
+    }, 300);
+    setTimeout(function(){ overlay.remove(); }, 1200);
+  }, 5200);
 })();
 </script>
 </body>
